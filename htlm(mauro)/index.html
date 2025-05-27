@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketplace</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #38a169;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      display: none;
+      z-index: 999;
+    }
+    .toast-error {
+      background: #e53e3e;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal de compra -->
+  <div id="buy-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded shadow-md w-80">
+      <h2 class="text-lg font-bold mb-4">Completar compra</h2>
+      <input id="account-number" type="text" placeholder="Número de cuenta" class="mb-4 w-full px-4 py-2 border rounded">
+      <button onclick="completePurchase()" class="bg-green-500 text-white px-4 py-2 rounded">Pagar</button>
+      <button onclick="closeBuyModal()" class="ml-2 text-gray-500">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md p-4 flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <span class="text-2xl font-bold text-blue-600">🌟 OurMarket</span>
+    </div>
+    <div id="user-status" class="flex items-center gap-2 hidden">
+      <span class="text-green-600 font-bold">●</span>
+      <span id="user-email" class="text-gray-700 text-sm"></span>
+      <button onclick="logout()" class="transition hover:bg-red-600 ml-2 px-3 py-1 text-sm bg-red-500 text-white rounded">Cerrar sesión</button>
+    </div>
+    <div class="flex gap-4">
+      <a href="#" onclick="showView('home')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Home</a>
+      <a href="#" onclick="showView('signin')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Sign In</a>
+      <a href="#" onclick="showView('register')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Register</a>
+      <a href="#" onclick="showView('sell')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Sell</a>
+      <a href="#" onclick="showView('profile')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Profile</a>
+      <a href="#" onclick="showView('earnings')" class="transition hover:bg-blue-500 hover:text-white px-4 py-2 border rounded">Earnings</a>
+    </div>
+  </nav>
+
+  <!-- Views -->
+  <main>
+    <section id="home" class="min-h-screen p-6 text-center">
+      <h1 class="text-4xl font-bold mb-6">Welcome to Marketplace</h1>
+      <p class="mb-4">Discover unique items or start selling your own!</p>
+      <button onclick="showView('marketplace')" class="transition hover:scale-105 duration-200 px-6 py-2 bg-blue-500 text-white rounded">Start Now</button>
+    </section>
+
+    <section id="signin" class="hidden min-h-screen flex flex-col justify-center items-center p-6">
+      <h2 class="text-2xl font-bold mb-4">Sign In</h2>
+      <input id="signin-email" type="email" placeholder="Email" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input id="signin-password" type="password" placeholder="Password" class="mb-4 px-4 py-2 border rounded w-64" />
+      <button onclick="login()" class="transition hover:scale-105 duration-200 px-6 py-2 bg-green-500 text-white rounded">Login</button>
+    </section>
+
+    <section id="register" class="hidden min-h-screen flex flex-col justify-center items-center p-6">
+      <h2 class="text-2xl font-bold mb-4">Register</h2>
+      <input id="register-email" type="email" placeholder="Email" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input type="password" placeholder="Create Password" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input type="password" placeholder="Confirm Password" class="mb-4 px-4 py-2 border rounded w-64" />
+      <button onclick="register()" class="transition hover:scale-105 duration-200 px-6 py-2 bg-blue-500 text-white rounded">Register</button>
+    </section>
+
+    <section id="marketplace" class="hidden min-h-screen p-6">
+      <h2 class="text-3xl font-bold mb-6">Explore Products</h2>
+      <div id="product-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <section id="sell" class="hidden min-h-screen flex flex-col items-center p-6">
+      <h2 class="text-2xl font-bold mb-4">Sell Your Product</h2>
+      <input id="product-name" type="text" placeholder="Product Name" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input id="product-description" type="text" placeholder="Description" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input id="product-price" type="number" placeholder="Price" class="mb-2 px-4 py-2 border rounded w-64" />
+      <input id="product-url" type="url" placeholder="Product Image URL (optional)" class="mb-4 px-4 py-2 border rounded w-64" />
+      <button onclick="addProduct()" class="transition hover:scale-105 duration-200 px-6 py-2 bg-purple-500 text-white rounded">Add Product</button>
+    </section>
+
+    <section id="profile" class="hidden min-h-screen p-6">
+      <h2 class="text-3xl font-bold mb-6">Tus Productos</h2>
+      <div id="profile-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <section id="earnings" class="hidden min-h-screen p-6">
+      <h2 class="text-3xl font-bold mb-6">Tus Ganancias</h2>
+      <p class="text-xl">Total ganado: $<span id="total-earnings">0.00</span></p>
+    </section>
+  </main>
+
+  <script>
+    let currentProduct = null;
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('toast-error');
+      if (isError) toast.classList.add('toast-error');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function getUserEmail() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      return user?.email;
+    }
+
+    function login() {
+      const email = document.getElementById('signin-email').value;
+      const password = document.getElementById('signin-password').value;
+      if (email && password) {
+        localStorage.setItem('user', JSON.stringify({ email }));
+        showToast('Inicio de sesión exitoso');
+        showView('marketplace');
+        updateUserStatus();
+        loadMarketplace();
+        loadEarnings();
+      } else {
+        showToast('Please enter email and password', true);
+      }
+    }
+
+    function logout() {
+      const email = getUserEmail();
+      const earnings = localStorage.getItem('earnings') || '0';
+      if (email) {
+        localStorage.setItem(`earnings_${email}`, earnings);
+      }
+      localStorage.removeItem('user');
+      localStorage.removeItem('earnings');
+      updateUserStatus();
+      showToast('Sesión cerrada');
+      showView('home');
+    }
+
+    function register() {
+      const email = document.getElementById('register-email').value;
+      if (email) {
+        localStorage.setItem('user', JSON.stringify({ email }));
+        showToast('Registro exitoso');
+        showView('marketplace');
+        updateUserStatus();
+      } else {
+        showToast('Please enter a valid email', true);
+      }
+    }
+
+    function updateUserStatus() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const statusDiv = document.getElementById('user-status');
+      const emailSpan = document.getElementById('user-email');
+      if (user && user.email) {
+        statusDiv.classList.remove('hidden');
+        emailSpan.textContent = user.email;
+      } else {
+        statusDiv.classList.add('hidden');
+        emailSpan.textContent = '';
+      }
+    }
+
+    function addProduct() {
+      const userEmail = getUserEmail();
+      if (!userEmail) return showToast('You must be logged in to add a product.', true);
+
+      const name = document.getElementById('product-name').value;
+      const description = document.getElementById('product-description').value;
+      const price = parseFloat(document.getElementById('product-price').value);
+      const url = document.getElementById('product-url').value;
+
+      if (!name || !description || isNaN(price)) {
+        showToast('Please complete all fields.', true);
+        return;
+      }
+
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      products.push({ name, description, price, url, status: 'available', owner: userEmail });
+      localStorage.setItem('products', JSON.stringify(products));
+      showToast('Product added successfully!');
+      showView('marketplace');
+      loadMarketplace();
+    }
+
+    function deleteProduct(index) {
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      products.splice(index, 1);
+      localStorage.setItem('products', JSON.stringify(products));
+      loadProfile();
+    }
+
+    function showView(viewId) {
+      const sections = document.querySelectorAll('main > section');
+      sections.forEach(section => section.classList.add('hidden'));
+      const target = document.getElementById(viewId);
+      if (target) {
+        target.classList.remove('hidden');
+        if (viewId === 'profile') loadProfile();
+        if (viewId === 'earnings') loadEarnings();
+      }
+    }
+
+    function loadMarketplace() {
+      const container = document.getElementById('product-list');
+      container.innerHTML = '';
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const currentUser = getUserEmail();
+
+      products.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'p-4 border rounded shadow bg-white';
+        div.innerHTML = `
+          ${p.url ? `<img src="${p.url}" alt="${p.name}" class="w-full h-40 object-cover mb-2 rounded" />` : ''}
+          <h3 class="text-xl font-bold">${p.name}</h3>
+          <p>${p.description}</p>
+          <p class="text-blue-600 font-semibold">$${p.price.toFixed(2)}</p>
+          ${p.status === 'available' ? `<button class="mt-2 transition hover:scale-105 duration-200 px-4 py-1 bg-green-500 text-white rounded" onclick="initiatePurchase(${i})">Comprar</button>` : '<span class="text-red-500">Vendido</span>'}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function initiatePurchase(index) {
+      currentProduct = index;
+      document.getElementById('buy-modal').classList.remove('hidden');
+    }
+
+    function completePurchase() {
+      const account = document.getElementById('account-number').value;
+      if (!account) {
+        showToast('Ingresa tu número de cuenta', true);
+        return;
+      }
+
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      const product = products[currentProduct];
+      if (!product || product.status === 'sold') return;
+
+      product.status = 'sold';
+      products[currentProduct] = product;
+      localStorage.setItem('products', JSON.stringify(products));
+
+      const owner = product.owner;
+      const earningsKey = `earnings_${owner}`;
+      const current = parseFloat(localStorage.getItem(earningsKey) || '0');
+      localStorage.setItem(earningsKey, (current + product.price).toFixed(2));
+
+      showToast('Compra completada');
+      closeBuyModal();
+      loadMarketplace();
+    }
+
+    function closeBuyModal() {
+      document.getElementById('buy-modal').classList.add('hidden');
+      document.getElementById('account-number').value = '';
+    }
+
+    function loadProfile() {
+      const container = document.getElementById('profile-list');
+      container.innerHTML = '';
+      const email = getUserEmail();
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
+      products.forEach((p, i) => {
+        if (p.owner === email) {
+          const div = document.createElement('div');
+          div.className = 'p-4 border rounded shadow bg-white';
+          div.innerHTML = `
+            ${p.url ? `<img src="${p.url}" alt="${p.name}" class="w-full h-40 object-cover mb-2 rounded" />` : ''}
+            <h3 class="text-xl font-bold">${p.name}</h3>
+            <p>${p.description}</p>
+            <p class="text-blue-600 font-semibold">$${p.price.toFixed(2)}</p>
+            <p class="${p.status === 'sold' ? 'text-red-500' : 'text-green-500'} font-bold">${p.status}</p>
+            <button class="mt-2 transition hover:scale-105 duration-200 px-4 py-1 bg-red-500 text-white rounded" onclick="deleteProduct(${i})">Eliminar</button>
+          `;
+          container.appendChild(div);
+        }
+      });
+    }
+
+    function loadEarnings() {
+      const email = getUserEmail();
+      const total = localStorage.getItem(`earnings_${email}`) || '0.00';
+      localStorage.setItem('earnings', total);
+      document.getElementById('total-earnings').textContent = parseFloat(total).toFixed(2);
+    }
+
+    window.onload = () => {
+      updateUserStatus();
+      loadMarketplace();
+      loadEarnings();
+    }
+  </script>
+</body>
+</html>
